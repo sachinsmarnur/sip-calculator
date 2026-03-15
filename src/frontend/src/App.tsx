@@ -101,18 +101,10 @@ export default function App() {
       <footer className="border-t border-border/60 bg-card mt-auto">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
-            © {year}. Built with ❤️ using{" "}
-            <a
-              href={utmLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline font-medium"
-            >
-              caffeine.ai
-            </a>
+            © {year}. Smart Investment Calculators
           </p>
           <p className="text-xs text-muted-foreground/60 text-center">
-            Calculations are for illustrative purposes. Actual returns may vary.
+            Calculations are for illustrative purposes. Read all the related documents carefully before investing.
           </p>
         </div>
       </footer>

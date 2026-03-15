@@ -1,7 +1,5 @@
 ## 
 
-This source code has been exported from [Caffeine](https://caffeine.ai/)
+This tool calculates SIP, Lump sum and SWP and is built to calculate your wealth at the end of specified year.
 
-### Coming Soon
-
-We are working on tools to help you build locally and deploy your apps back to caffeine.
+Note: Calculations are for illustrative purpose only. Read all the related documents carefully before investing.
