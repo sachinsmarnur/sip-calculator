@@ -1,0 +1,102 @@
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0.98 0.005 80;
+    --foreground: 0.15 0.015 270;
+    --card: 1 0 0;
+    --card-foreground: 0.15 0.015 270;
+    --popover: 1 0 0;
+    --popover-foreground: 0.15 0.015 270;
+    --primary: 0.38 0.12 160;
+    --primary-foreground: 0.99 0 0;
+    --secondary: 0.95 0.008 80;
+    --secondary-foreground: 0.25 0.015 270;
+    --muted: 0.95 0.005 80;
+    --muted-foreground: 0.52 0.015 270;
+    --accent: 0.75 0.13 75;
+    --accent-foreground: 0.12 0.015 270;
+    --destructive: 0.58 0.22 25;
+    --destructive-foreground: 0.99 0 0;
+    --border: 0.9 0.008 80;
+    --input: 0.9 0.008 80;
+    --ring: 0.38 0.12 160;
+    --radius: 0.75rem;
+    --chart-1: 0.55 0.15 175;
+    --chart-2: 0.72 0.14 75;
+    --chart-3: 0.62 0.18 25;
+    --chart-4: 0.55 0.1 240;
+    --chart-5: 0.65 0.15 300;
+    --sidebar: 0.18 0.03 265;
+    --sidebar-foreground: 0.92 0.005 80;
+    --sidebar-primary: 0.55 0.15 175;
+    --sidebar-primary-foreground: 0.99 0 0;
+    --sidebar-accent: 0.28 0.04 265;
+    --sidebar-accent-foreground: 0.92 0.005 80;
+    --sidebar-border: 0.28 0.03 265;
+    --sidebar-ring: 0.55 0.15 175;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Slider thumb overrides for financial feel */
+[data-slot="slider"] [data-slot="thumb"] {
+  background: oklch(var(--primary));
+  border: 2px solid white;
+  box-shadow: 0 2px 8px oklch(var(--primary) / 0.4);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: oklch(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--muted-foreground) / 0.5);
+}
