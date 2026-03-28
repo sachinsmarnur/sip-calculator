@@ -1,12 +1,15 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PiggyBank, TrendingUp, Wallet } from "lucide-react";
+import { PiggyBank, Target, TrendingUp, Wallet, ArrowUpCircle } from "lucide-react";
+import { Toaster } from "sonner";
+import { GoalPlannerCalculator } from "./components/GoalPlannerCalculator";
 import { LumpSumCalculator } from "./components/LumpSumCalculator";
 import { SIPCalculator } from "./components/SIPCalculator";
+import { StepUpCalculator } from "./components/StepUpCalculator";
 import { SWPCalculator } from "./components/SWPCalculator";
+import { ThemeToggle } from "./components/ThemeToggle";
 
 export default function App() {
   const year = new Date().getFullYear();
-  const utmLink = `https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -26,11 +29,12 @@ export default function App() {
               </p>
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs text-sidebar-foreground/60 bg-sidebar-accent px-3 py-1.5 rounded-full">
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-sidebar-foreground/60 bg-sidebar-accent px-3 py-1.5 rounded-full">
               <span className="h-1.5 w-1.5 rounded-full bg-sidebar-primary animate-pulse" />
               Live Calculations
             </span>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -44,9 +48,9 @@ export default function App() {
               <span className="text-primary"> Future</span>
             </h2>
             <p className="text-muted-foreground mt-3 text-base leading-relaxed">
-              Calculate returns for SIP, Lump Sum investments, and plan your
-              retirement income with our SWP tool. All calculations use standard
-              financial formulas.
+              Calculate returns for SIP, Step-Up SIP, Lump Sum investments,
+              plan goal-based investments, and manage retirement income with
+              our SWP tool. All calculations use standard financial formulas.
             </p>
           </div>
         </div>
@@ -55,29 +59,47 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8">
         <Tabs defaultValue="sip">
-          <TabsList className="mb-8 grid w-full grid-cols-3 h-auto p-1.5 bg-card border border-border shadow-card rounded-xl">
+          <TabsList className="mb-8 grid w-full grid-cols-5 h-auto p-1.5 bg-card border border-border shadow-card rounded-xl">
             <TabsTrigger
               value="sip"
               data-ocid="nav.sip_tab"
-              className="flex items-center gap-2 py-3 text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+              className="flex items-center gap-1.5 py-3 text-xs sm:text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
             >
               <TrendingUp className="h-4 w-4" />
               <span className="hidden sm:inline">SIP</span>
               <span className="sm:hidden">SIP</span>
             </TabsTrigger>
             <TabsTrigger
+              value="stepup"
+              data-ocid="nav.stepup_tab"
+              className="flex items-center gap-1.5 py-3 text-xs sm:text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+            >
+              <ArrowUpCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Step-Up</span>
+              <span className="sm:hidden">Step</span>
+            </TabsTrigger>
+            <TabsTrigger
               value="lumpsum"
               data-ocid="nav.lumpsum_tab"
-              className="flex items-center gap-2 py-3 text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+              className="flex items-center gap-1.5 py-3 text-xs sm:text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
             >
               <PiggyBank className="h-4 w-4" />
               <span className="hidden sm:inline">Lump Sum</span>
               <span className="sm:hidden">Lump</span>
             </TabsTrigger>
             <TabsTrigger
+              value="goal"
+              data-ocid="nav.goal_tab"
+              className="flex items-center gap-1.5 py-3 text-xs sm:text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+            >
+              <Target className="h-4 w-4" />
+              <span className="hidden sm:inline">Goal Plan</span>
+              <span className="sm:hidden">Goal</span>
+            </TabsTrigger>
+            <TabsTrigger
               value="swp"
               data-ocid="nav.swp_tab"
-              className="flex items-center gap-2 py-3 text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
+              className="flex items-center gap-1.5 py-3 text-xs sm:text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
             >
               <Wallet className="h-4 w-4" />
               <span className="hidden sm:inline">SWP</span>
@@ -88,8 +110,14 @@ export default function App() {
           <TabsContent value="sip">
             <SIPCalculator />
           </TabsContent>
+          <TabsContent value="stepup">
+            <StepUpCalculator />
+          </TabsContent>
           <TabsContent value="lumpsum">
             <LumpSumCalculator />
+          </TabsContent>
+          <TabsContent value="goal">
+            <GoalPlannerCalculator />
           </TabsContent>
           <TabsContent value="swp">
             <SWPCalculator />
@@ -108,6 +136,9 @@ export default function App() {
           </p>
         </div>
       </footer>
+
+      {/* Toaster for export notifications */}
+      <Toaster richColors position="bottom-right" />
     </div>
   );
 }

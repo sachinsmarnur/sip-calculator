@@ -52,6 +52,41 @@
     --sidebar-border: 0.28 0.03 265;
     --sidebar-ring: 0.55 0.15 175;
   }
+
+  .dark {
+    --background: 0.13 0.02 270;
+    --foreground: 0.92 0.005 80;
+    --card: 0.17 0.025 270;
+    --card-foreground: 0.92 0.005 80;
+    --popover: 0.17 0.025 270;
+    --popover-foreground: 0.92 0.005 80;
+    --primary: 0.55 0.15 175;
+    --primary-foreground: 0.13 0.02 270;
+    --secondary: 0.22 0.03 270;
+    --secondary-foreground: 0.88 0.008 80;
+    --muted: 0.20 0.025 270;
+    --muted-foreground: 0.60 0.015 80;
+    --accent: 0.65 0.12 75;
+    --accent-foreground: 0.13 0.015 270;
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.99 0 0;
+    --border: 0.25 0.025 270;
+    --input: 0.25 0.025 270;
+    --ring: 0.55 0.15 175;
+    --chart-1: 0.60 0.16 175;
+    --chart-2: 0.75 0.14 75;
+    --chart-3: 0.65 0.18 25;
+    --chart-4: 0.60 0.12 240;
+    --chart-5: 0.68 0.15 300;
+    --sidebar: 0.12 0.025 270;
+    --sidebar-foreground: 0.90 0.005 80;
+    --sidebar-primary: 0.55 0.15 175;
+    --sidebar-primary-foreground: 0.13 0.02 270;
+    --sidebar-accent: 0.20 0.035 270;
+    --sidebar-accent-foreground: 0.90 0.005 80;
+    --sidebar-border: 0.22 0.03 270;
+    --sidebar-ring: 0.55 0.15 175;
+  }
 }
 
 @layer base {
@@ -85,6 +120,10 @@
   box-shadow: 0 2px 8px oklch(var(--primary) / 0.4);
 }
 
+.dark [data-slot="slider"] [data-slot="thumb"] {
+  border-color: oklch(var(--card));
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -99,4 +138,28 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(var(--muted-foreground) / 0.5);
+}
+
+/* Smooth theme transitions */
+body,
+.bg-background,
+.bg-card,
+.bg-sidebar {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Fade-up animation */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.4s ease-out;
 }

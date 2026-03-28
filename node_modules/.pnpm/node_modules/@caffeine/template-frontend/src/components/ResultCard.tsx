@@ -1,8 +1,10 @@
 import { cn } from "@/lib/utils";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 interface StatProps {
   label: string;
   value: string;
+  numericValue?: number;
   highlight?: boolean;
   color?: "green" | "amber" | "default";
 }
@@ -10,9 +12,18 @@ interface StatProps {
 export function ResultStat({
   label,
   value,
+  numericValue,
   highlight,
   color = "default",
 }: StatProps) {
+  const textColorClass = cn(
+    "text-xl font-bold font-display",
+    color === "green" && "text-chart-1",
+    color === "amber" && "text-chart-2",
+    color === "default" && highlight ? "text-primary" : "",
+    color === "default" && !highlight && "text-foreground",
+  );
+
   return (
     <div
       className={cn(
@@ -25,16 +36,15 @@ export function ResultStat({
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
         {label}
       </p>
-      <p
-        className={cn(
-          "text-xl font-bold font-display",
-          color === "green" && "text-chart-1",
-          color === "amber" && "text-chart-2",
-          color === "default" && highlight ? "text-primary" : "text-foreground",
-        )}
-      >
-        {value}
-      </p>
+      {numericValue !== undefined ? (
+        <AnimatedNumber
+          value={numericValue}
+          compact
+          className={textColorClass}
+        />
+      ) : (
+        <p className={textColorClass}>{value}</p>
+      )}
     </div>
   );
 }

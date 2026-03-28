@@ -84,6 +84,154 @@ export function calculateLumpSum(
   return { principal, estimatedReturns, maturityValue, yearlyGrowth };
 }
 
+// --- Step-Up SIP ---
+
+export interface StepUpSIPResult {
+  totalInvested: number;
+  estimatedReturns: number;
+  maturityValue: number;
+  yearlyBreakdown: StepUpYearlyData[];
+}
+
+export interface StepUpYearlyData {
+  year: number;
+  sipAmount: number; // monthly SIP for that year
+  invested: number; // cumulative invested
+  returns: number; // cumulative returns
+  total: number; // cumulative value
+}
+
+export function calculateStepUpSIP(
+  initialMonthly: number,
+  annualStepUp: number, // percentage e.g. 10 for 10%
+  annualReturn: number,
+  years: number,
+): StepUpSIPResult {
+  const r = annualReturn / 12 / 100;
+  let totalInvested = 0;
+  let corpusValue = 0;
+  const yearlyBreakdown: StepUpYearlyData[] = [];
+
+  for (let y = 1; y <= years; y++) {
+    const currentMonthly =
+      initialMonthly * (1 + annualStepUp / 100) ** (y - 1);
+
+    for (let m = 1; m <= 12; m++) {
+      corpusValue = (corpusValue + currentMonthly) * (1 + r);
+      totalInvested += currentMonthly;
+    }
+
+    yearlyBreakdown.push({
+      year: y,
+      sipAmount: Math.round(currentMonthly),
+      invested: totalInvested,
+      returns: corpusValue - totalInvested,
+      total: corpusValue,
+    });
+  }
+
+  return {
+    totalInvested,
+    estimatedReturns: corpusValue - totalInvested,
+    maturityValue: corpusValue,
+    yearlyBreakdown,
+  };
+}
+
+// --- Goal-Based SIP ---
+
+export interface GoalSIPResult {
+  requiredMonthlySIP: number;
+  totalInvested: number;
+  estimatedReturns: number;
+  targetAmount: number;
+  inflationAdjustedTarget: number | null;
+  yearlyBreakdown: YearlyData[];
+  milestones: GoalMilestone[];
+}
+
+export interface GoalMilestone {
+  percent: number; // 25, 50, 75, 100
+  year: number;
+  month: number;
+}
+
+export function calculateInflationAdjustedGoal(
+  targetAmount: number,
+  inflationRate: number,
+  years: number,
+): number {
+  return targetAmount * (1 + inflationRate / 100) ** years;
+}
+
+export function calculateGoalSIP(
+  targetAmount: number,
+  annualReturn: number,
+  years: number,
+  inflationRate: number | null = null,
+): GoalSIPResult {
+  const adjustedTarget =
+    inflationRate !== null
+      ? calculateInflationAdjustedGoal(targetAmount, inflationRate, years)
+      : targetAmount;
+
+  const r = annualReturn / 12 / 100;
+  const n = years * 12;
+  // Reverse SIP formula: P = FV / [((1+r)^n - 1) / r * (1+r)]
+  const requiredMonthlySIP =
+    adjustedTarget / ((((1 + r) ** n - 1) / r) * (1 + r));
+
+  const totalInvested = requiredMonthlySIP * n;
+  const estimatedReturns = adjustedTarget - totalInvested;
+
+  // Build yearly breakdown
+  const yearlyBreakdown: YearlyData[] = [];
+  for (let y = 1; y <= years; y++) {
+    const months = y * 12;
+    const fv =
+      requiredMonthlySIP * (((1 + r) ** months - 1) / r) * (1 + r);
+    const inv = requiredMonthlySIP * months;
+    yearlyBreakdown.push({
+      year: y,
+      invested: inv,
+      returns: fv - inv,
+      total: fv,
+    });
+  }
+
+  // Calculate milestones (when 25%, 50%, 75%, 100% of target is reached)
+  const milestones: GoalMilestone[] = [];
+  const milestonePcts = [25, 50, 75, 100];
+  let nextMilestoneIdx = 0;
+
+  for (let m = 1; m <= n && nextMilestoneIdx < milestonePcts.length; m++) {
+    const fv =
+      requiredMonthlySIP * (((1 + r) ** m - 1) / r) * (1 + r);
+    const pct = (fv / adjustedTarget) * 100;
+    while (
+      nextMilestoneIdx < milestonePcts.length &&
+      pct >= milestonePcts[nextMilestoneIdx]
+    ) {
+      milestones.push({
+        percent: milestonePcts[nextMilestoneIdx],
+        year: Math.ceil(m / 12),
+        month: m,
+      });
+      nextMilestoneIdx++;
+    }
+  }
+
+  return {
+    requiredMonthlySIP,
+    totalInvested,
+    estimatedReturns,
+    targetAmount,
+    inflationAdjustedTarget: inflationRate !== null ? adjustedTarget : null,
+    yearlyBreakdown,
+    milestones,
+  };
+}
+
 export function calculateSWP(
   corpus: number,
   monthlyWithdrawal: number,

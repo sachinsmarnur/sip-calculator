@@ -13,12 +13,17 @@ import { calculateSIP } from "@/utils/calculations";
 import { formatINR } from "@/utils/formatters";
 import { useMemo, useState } from "react";
 import {
+  Area,
+  AreaChart,
+  CartesianGrid,
   Cell,
   Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { ExplanationSection } from "./ExplanationSection";
 import { ResultStat } from "./ResultCard";
@@ -31,6 +36,7 @@ export function SIPCalculator() {
   const [monthly, setMonthly] = useState(10000);
   const [returnRate, setReturnRate] = useState(12);
   const [years, setYears] = useState(15);
+  const [chartMode, setChartMode] = useState<"pie" | "growth">("pie");
 
   const result = useMemo(
     () => calculateSIP(monthly, returnRate, years),
@@ -42,12 +48,38 @@ export function SIPCalculator() {
     { name: "Returns", value: result.estimatedReturns, key: CHART_KEYS[1] },
   ];
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const areaData = result.yearlyBreakdown.map((d) => ({
+    year: `Y${d.year}`,
+    Invested: d.invested,
+    Returns: d.returns,
+  }));
+
+  const CustomPieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-sm">
           <p className="font-semibold">{payload[0].name}</p>
           <p className="text-muted-foreground">{formatINR(payload[0].value)}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomAreaTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const total = payload.reduce((sum: number, p: any) => sum + p.value, 0);
+      return (
+        <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-sm space-y-1">
+          <p className="font-semibold text-foreground">{label}</p>
+          {payload.map((p: any) => (
+            <p key={p.name} style={{ color: p.color }}>
+              {p.name}: {formatINR(p.value, true)}
+            </p>
+          ))}
+          <p className="font-bold text-foreground border-t border-border pt-1">
+            Total: {formatINR(total, true)}
+          </p>
         </div>
       );
     }
@@ -123,59 +155,179 @@ export function SIPCalculator() {
           data-ocid="sip.result_card"
         >
           <CardHeader className="pb-4">
-            <CardTitle className="font-display text-lg">
-              Projected Returns
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="font-display text-lg">
+                Projected Returns
+              </CardTitle>
+              {/* Chart mode toggle */}
+              <div className="flex bg-muted rounded-lg p-0.5 gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => setChartMode("pie")}
+                  className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
+                    chartMode === "pie"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Breakdown
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChartMode("growth")}
+                  className={`text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
+                    chartMode === "growth"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Growth
+                </button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <ResultStat
                 label="Total Invested"
                 value={formatINR(result.totalInvested, true)}
+                numericValue={result.totalInvested}
               />
               <ResultStat
                 label="Est. Returns"
                 value={formatINR(result.estimatedReturns, true)}
+                numericValue={result.estimatedReturns}
                 color="green"
               />
               <ResultStat
                 label="Maturity Value"
                 value={formatINR(result.maturityValue, true)}
+                numericValue={result.maturityValue}
                 highlight
               />
             </div>
 
             <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={3}
-                    dataKey="value"
-                    animationBegin={0}
-                    animationDuration={600}
+              {chartMode === "pie" ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={85}
+                      paddingAngle={3}
+                      dataKey="value"
+                      animationBegin={0}
+                      animationDuration={600}
+                    >
+                      {pieData.map((entry) => (
+                        <Cell
+                          key={entry.key}
+                          fill={CHART_COLORS[pieData.indexOf(entry)]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomPieTooltip />} />
+                    <Legend
+                      formatter={(value) => (
+                        <span className="text-xs font-medium text-foreground">
+                          {value}
+                        </span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={areaData}
+                    margin={{ top: 5, right: 5, left: 0, bottom: 0 }}
                   >
-                    {pieData.map((entry) => (
-                      <Cell
-                        key={entry.key}
-                        fill={CHART_COLORS[pieData.indexOf(entry)]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    formatter={(value) => (
-                      <span className="text-xs font-medium text-foreground">
-                        {value}
-                      </span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+                    <defs>
+                      <linearGradient
+                        id="sipGrowthInvested"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#2db38a"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#2db38a"
+                          stopOpacity={0.05}
+                        />
+                      </linearGradient>
+                      <linearGradient
+                        id="sipGrowthReturns"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#f0a843"
+                          stopOpacity={0.4}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#f0a843"
+                          stopOpacity={0.05}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="oklch(0.90 0.008 80)"
+                    />
+                    <XAxis
+                      dataKey="year"
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={Math.ceil(years / 8)}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v) => formatINR(v, true)}
+                      width={65}
+                    />
+                    <Tooltip content={<CustomAreaTooltip />} />
+                    <Legend
+                      formatter={(value) => (
+                        <span className="text-xs font-medium text-foreground">
+                          {value}
+                        </span>
+                      )}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="Invested"
+                      stackId="1"
+                      stroke="#2db38a"
+                      strokeWidth={2}
+                      fill="url(#sipGrowthInvested)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="Returns"
+                      stackId="1"
+                      stroke="#f0a843"
+                      strokeWidth={2}
+                      fill="url(#sipGrowthReturns)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             <div className="mt-3 grid grid-cols-2 gap-3">
