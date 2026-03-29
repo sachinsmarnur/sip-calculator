@@ -8,6 +8,7 @@ import { StepUpCalculator } from "./components/StepUpCalculator";
 import { SWPCalculator } from "./components/SWPCalculator";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { CurrencyToggle } from "./components/CurrencyToggle";
+import { FAQSection } from "./components/FAQSection";
 
 export default function App() {
   const year = new Date().getFullYear();
@@ -125,6 +126,8 @@ export default function App() {
             <SWPCalculator />
           </TabsContent>
         </Tabs>
+
+        <FAQSection />
       </main>
 
       {/* Footer */}
