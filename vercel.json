@@ -1,28 +1,22 @@
 {
-    "builds": [
+    "headers": [
         {
-            "src": "api/*.js",
-            "use": "@vercel/node"
+            "source": "/sitemap.xml",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache, no-store, max-age=0, must-revalidate"
+                }
+            ]
         },
         {
-            "src": "src/frontend/package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "dist"
-            }
-        }
-    ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/api/$1"
-        },
-        {
-            "handle": "filesystem"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/index.html"
+            "source": "/robots.txt",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache, no-store, max-age=0, must-revalidate"
+                }
+            ]
         }
     ]
 }
