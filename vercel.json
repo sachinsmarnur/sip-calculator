@@ -1,17 +1,27 @@
 {
-    "headers": [
+    "routes": [
         {
-            "source": "/sitemap.xml",
-            "headers": [
-                {
-                    "key": "Cache-Control",
-                    "value": "no-cache, no-store, must-revalidate"
-                },
-                {
-                    "key": "Content-Type",
-                    "value": "application/xml"
-                }
-            ]
+            "src": "/sitemap.xml",
+            "headers": {
+                "Cache-Control": "no-store, max-age=0",
+                "Content-Type": "application/xml"
+            },
+            "dest": "/sitemap.xml"
+        },
+        {
+            "src": "/robots.txt",
+            "headers": {
+                "Cache-Control": "no-store, max-age=0",
+                "Content-Type": "text/plain"
+            },
+            "dest": "/robots.txt"
+        },
+        {
+            "handle": "filesystem"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/index.html"
         }
     ]
 }
