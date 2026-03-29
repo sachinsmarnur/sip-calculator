@@ -1,20 +1,21 @@
 {
-    "routes": [
+    "builds": [
         {
-            "src": "/sitemap.xml",
-            "headers": {
-                "Cache-Control": "no-store, max-age=0",
-                "Content-Type": "application/xml"
-            },
-            "dest": "/sitemap.xml"
+            "src": "api/*.js",
+            "use": "@vercel/node"
         },
         {
-            "src": "/robots.txt",
-            "headers": {
-                "Cache-Control": "no-store, max-age=0",
-                "Content-Type": "text/plain"
-            },
-            "dest": "/robots.txt"
+            "src": "src/frontend/package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/$1"
         },
         {
             "handle": "filesystem"
