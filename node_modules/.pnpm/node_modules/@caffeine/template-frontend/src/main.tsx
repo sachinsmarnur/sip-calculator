@@ -15,14 +15,18 @@ declare global {
   }
 }
 
+import { CurrencyProvider } from "./hooks/useCurrency";
+
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <InternetIdentityProvider>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-        <App />
-      </ThemeProvider>
+      <CurrencyProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <App />
+        </ThemeProvider>
+      </CurrencyProvider>
     </InternetIdentityProvider>
   </QueryClientProvider>,
 );

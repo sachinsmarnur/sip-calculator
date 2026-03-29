@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { calculateGoalSIP } from "@/utils/calculations";
-import { formatINR, formatMonths } from "@/utils/formatters";
+import { formatMonths } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/useCurrency";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Target, CheckCircle2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Cell,
   Legend,
@@ -21,11 +23,12 @@ import { SliderInput } from "./SliderInput";
 const CHART_COLORS = ["#f97316", "#06b6d4"];
 
 export function GoalPlannerCalculator() {
-  const [targetAmount, setTargetAmount] = useState(10000000); // 1 Crore
-  const [returnRate, setReturnRate] = useState(12);
-  const [years, setYears] = useState(15);
-  const [adjustForInflation, setAdjustForInflation] = useState(false);
-  const [inflationRate, setInflationRate] = useState(6);
+  const { formatCurrency, currencySymbol } = useCurrency();
+  const [targetAmount, setTargetAmount] = useLocalStorage("goal-targetAmount", 10000000); // 1 Crore
+  const [returnRate, setReturnRate] = useLocalStorage("goal-returnRate", 12);
+  const [years, setYears] = useLocalStorage("goal-years", 15);
+  const [adjustForInflation, setAdjustForInflation] = useLocalStorage("goal-adjustForInflation", false);
+  const [inflationRate, setInflationRate] = useLocalStorage("goal-inflationRate", 6);
 
   const result = useMemo(
     () =>
@@ -47,14 +50,12 @@ export function GoalPlannerCalculator() {
   ];
 
   const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-sm">
-          <p className="font-semibold">{payload[0].name}</p>
-          <p className="text-muted-foreground">{formatINR(payload[0].value)}</p>
-        </div>
-      );
-    }
+          {payload.map((p: any) => (
+            <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-sm">
+              <p className="font-semibold">{payload[0].name}</p>
+              <p className="text-muted-foreground">{formatCurrency(payload[0].value)}</p>
+            </div>
+          ))}
     return null;
   };
 
@@ -95,7 +96,7 @@ export function GoalPlannerCalculator() {
               min={100000}
               max={100000000}
               step={100000}
-              prefix="₹"
+              prefix={currencySymbol}
               inputId="goal-target"
               ocidInput="goal.target_input"
             />
@@ -165,19 +166,18 @@ export function GoalPlannerCalculator() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Key number: required SIP */}
             <div className="bg-gradient-to-r from-orange-50 to-cyan-50 dark:from-orange-950/30 dark:to-cyan-950/30 border border-orange-200 dark:border-orange-800/50 rounded-xl p-5 mb-5 text-center">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                 Required Monthly SIP
               </p>
               <p className="text-3xl font-bold font-display text-orange-600 dark:text-orange-400">
-                {formatINR(result.requiredMonthlySIP)}
+                {formatCurrency(result.requiredMonthlySIP)}
               </p>
               {result.inflationAdjustedTarget && (
                 <p className="text-xs text-muted-foreground mt-2">
                   Inflation-adjusted target:{" "}
-                  <strong>{formatINR(result.inflationAdjustedTarget, true)}</strong>{" "}
-                  (from {formatINR(targetAmount, true)})
+                  <strong>{formatCurrency(result.inflationAdjustedTarget, true)}</strong>{" "}
+                  (from {formatCurrency(targetAmount, true)})
                 </p>
               )}
             </div>
@@ -185,18 +185,18 @@ export function GoalPlannerCalculator() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <ResultStat
                 label="Total Invested"
-                value={formatINR(result.totalInvested, true)}
+                value={formatCurrency(result.totalInvested, true)}
                 numericValue={result.totalInvested}
               />
               <ResultStat
                 label="Market Returns"
-                value={formatINR(result.estimatedReturns, true)}
+                value={formatCurrency(result.estimatedReturns, true)}
                 numericValue={result.estimatedReturns}
                 color="green"
               />
               <ResultStat
                 label="Goal Amount"
-                value={formatINR(effectiveTarget, true)}
+                value={formatCurrency(effectiveTarget, true)}
                 numericValue={effectiveTarget}
                 highlight
               />
@@ -306,7 +306,7 @@ export function GoalPlannerCalculator() {
               </li>
               <li>
                 <strong>FV</strong> — Target Amount (
-                {formatINR(effectiveTarget, true)})
+                {formatCurrency(effectiveTarget, true)})
               </li>
               <li>
                 <strong>r</strong> — Monthly rate = {returnRate}% ÷ 12 ÷ 100 ={" "}
@@ -323,24 +323,24 @@ export function GoalPlannerCalculator() {
             </h4>
             <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4 text-sm space-y-2">
               <p>
-                Target: <strong>{formatINR(targetAmount)}</strong>
+                Target: <strong>{formatCurrency(targetAmount)}</strong>
                 {result.inflationAdjustedTarget && (
                   <span>
                     {" "}→ Inflation-adjusted:{" "}
-                    <strong>{formatINR(result.inflationAdjustedTarget)}</strong>
+                    <strong>{formatCurrency(result.inflationAdjustedTarget)}</strong>
                   </span>
                 )}
               </p>
               <p>
                 Required SIP:{" "}
                 <strong className="text-orange-600">
-                  {formatINR(result.requiredMonthlySIP)}/month
+                  {formatCurrency(result.requiredMonthlySIP)}/month
                 </strong>
               </p>
               <p>
                 Over {years} years, you'll invest{" "}
-                <strong>{formatINR(result.totalInvested)}</strong> and the market
-                adds <strong className="text-chart-1">{formatINR(result.estimatedReturns)}</strong>
+                <strong>{formatCurrency(result.totalInvested)}</strong> and the market
+                adds <strong className="text-chart-1">{formatCurrency(result.estimatedReturns)}</strong>
               </p>
             </div>
           </div>

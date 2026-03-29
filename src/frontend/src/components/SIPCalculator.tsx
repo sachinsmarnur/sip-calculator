@@ -1,5 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
@@ -10,7 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { calculateSIP } from "@/utils/calculations";
-import { formatINR } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/useCurrency";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useMemo, useState } from "react";
 import {
   Area,
@@ -33,14 +36,17 @@ const CHART_COLORS = ["#2db38a", "#f0a843"];
 const CHART_KEYS = ["invested", "returns"] as const;
 
 export function SIPCalculator() {
-  const [monthly, setMonthly] = useState(10000);
-  const [returnRate, setReturnRate] = useState(12);
-  const [years, setYears] = useState(15);
-  const [chartMode, setChartMode] = useState<"pie" | "growth">("pie");
+  const { formatCurrency, currencySymbol } = useCurrency();
+  const [monthly, setMonthly] = useLocalStorage("sip-monthly", 10000);
+  const [returnRate, setReturnRate] = useLocalStorage("sip-returnRate", 12);
+  const [years, setYears] = useLocalStorage("sip-years", 15);
+  const [chartMode, setChartMode] = useLocalStorage<"pie" | "growth">("sip-chartMode", "pie");
+  const [adjustForInflation, setAdjustForInflation] = useLocalStorage("sip-adjustForInflation", false);
+  const [inflationRate, setInflationRate] = useLocalStorage("sip-inflationRate", 6);
 
   const result = useMemo(
-    () => calculateSIP(monthly, returnRate, years),
-    [monthly, returnRate, years],
+    () => calculateSIP(monthly, returnRate, years, adjustForInflation ? inflationRate : null),
+    [monthly, returnRate, years, adjustForInflation, inflationRate],
   );
 
   const pieData = [
@@ -59,7 +65,7 @@ export function SIPCalculator() {
       return (
         <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-sm">
           <p className="font-semibold">{payload[0].name}</p>
-          <p className="text-muted-foreground">{formatINR(payload[0].value)}</p>
+          <p className="text-muted-foreground">{formatCurrency(payload[0].value)}</p>
         </div>
       );
     }
@@ -74,11 +80,11 @@ export function SIPCalculator() {
           <p className="font-semibold text-foreground">{label}</p>
           {payload.map((p: any) => (
             <p key={p.name} style={{ color: p.color }}>
-              {p.name}: {formatINR(p.value, true)}
+              {p.name}: {formatCurrency(p.value, true)}
             </p>
           ))}
           <p className="font-bold text-foreground border-t border-border pt-1">
-            Total: {formatINR(total, true)}
+            Total: {formatCurrency(total, true)}
           </p>
         </div>
       );
@@ -120,7 +126,7 @@ export function SIPCalculator() {
               min={500}
               max={100000}
               step={500}
-              prefix="₹"
+              prefix={currencySymbol}
               inputId="sip-monthly"
               ocidInput="sip.monthly_input"
             />
@@ -146,6 +152,36 @@ export function SIPCalculator() {
               inputId="sip-period"
               ocidInput="sip.period_input"
             />
+
+            {/* Inflation Toggle */}
+            <div className="space-y-4 pt-2 border-t border-border/60">
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="sip-inflation-toggle"
+                  className="text-sm font-semibold text-foreground cursor-pointer"
+                >
+                  Adjust for Inflation
+                </Label>
+                <Switch
+                  id="sip-inflation-toggle"
+                  checked={adjustForInflation}
+                  onCheckedChange={setAdjustForInflation}
+                />
+              </div>
+              {adjustForInflation && (
+                <SliderInput
+                  label="Expected Inflation Rate"
+                  value={inflationRate}
+                  onChange={setInflationRate}
+                  min={1}
+                  max={15}
+                  step={0.5}
+                  suffix="%"
+                  inputId="sip-inflation"
+                  ocidInput="sip.inflation_input"
+                />
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -190,22 +226,36 @@ export function SIPCalculator() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <ResultStat
                 label="Total Invested"
-                value={formatINR(result.totalInvested, true)}
+                value={formatCurrency(result.totalInvested, true)}
                 numericValue={result.totalInvested}
               />
               <ResultStat
                 label="Est. Returns"
-                value={formatINR(result.estimatedReturns, true)}
+                value={formatCurrency(result.estimatedReturns, true)}
                 numericValue={result.estimatedReturns}
                 color="green"
               />
               <ResultStat
                 label="Maturity Value"
-                value={formatINR(result.maturityValue, true)}
+                value={formatCurrency(result.maturityValue, true)}
                 numericValue={result.maturityValue}
                 highlight
               />
             </div>
+
+            {adjustForInflation && result.inflationAdjustedMaturity && (
+              <div className="bg-muted border border-border/80 rounded-xl p-4 mb-6 text-center shadow-inner">
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                  Inflation Adjusted Value
+                </p>
+                <p className="text-2xl font-bold font-display text-primary">
+                  {formatCurrency(result.inflationAdjustedMaturity)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Purchasing power of your returns in today's money
+                </p>
+              </div>
+            )}
 
             <div className="h-52">
               {chartMode === "pie" ? (
@@ -298,7 +348,7 @@ export function SIPCalculator() {
                       tick={{ fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(v) => formatINR(v, true)}
+                      tickFormatter={(v) => formatCurrency(v, true)}
                       width={65}
                     />
                     <Tooltip content={<CustomAreaTooltip />} />
@@ -388,13 +438,13 @@ export function SIPCalculator() {
                       Year {row.year}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">
-                      {formatINR(row.invested, true)}
+                      {formatCurrency(row.invested, true)}
                     </TableCell>
                     <TableCell className="text-right text-chart-1 font-medium">
-                      {formatINR(row.returns, true)}
+                      {formatCurrency(row.returns, true)}
                     </TableCell>
                     <TableCell className="text-right font-bold">
-                      {formatINR(row.total, true)}
+                      {formatCurrency(row.total, true)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -429,7 +479,7 @@ export function SIPCalculator() {
                 <strong>FV</strong> — Future Value (Maturity Amount)
               </li>
               <li>
-                <strong>P</strong> — Monthly Investment Amount (₹
+                <strong>P</strong> — Monthly Investment Amount ({currencySymbol}
                 {monthly.toLocaleString("en-IN")})
               </li>
               <li>
@@ -448,7 +498,7 @@ export function SIPCalculator() {
             </h4>
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 text-sm space-y-2">
               <p>
-                Monthly SIP: <strong>₹{monthly.toLocaleString("en-IN")}</strong>
+                Monthly SIP: <strong>{currencySymbol}{monthly.toLocaleString("en-IN")}</strong>
               </p>
               <p>
                 Annual Return: <strong>{returnRate}%</strong> → Monthly Rate:{" "}
@@ -462,18 +512,18 @@ export function SIPCalculator() {
               </p>
               <p>
                 Total Invested:{" "}
-                <strong>{formatINR(result.totalInvested)}</strong>
+                <strong>{formatCurrency(result.totalInvested)}</strong>
               </p>
               <p>
                 Estimated Returns:{" "}
                 <strong className="text-chart-1">
-                  {formatINR(result.estimatedReturns)}
+                  {formatCurrency(result.estimatedReturns)}
                 </strong>
               </p>
               <p>
                 Final Corpus:{" "}
                 <strong className="text-primary">
-                  {formatINR(result.maturityValue)}
+                  {formatCurrency(result.maturityValue)}
                 </strong>
               </p>
             </div>

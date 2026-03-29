@@ -7,6 +7,7 @@ import { SIPCalculator } from "./components/SIPCalculator";
 import { StepUpCalculator } from "./components/StepUpCalculator";
 import { SWPCalculator } from "./components/SWPCalculator";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { CurrencyToggle } from "./components/CurrencyToggle";
 
 export default function App() {
   const year = new Date().getFullYear();
@@ -34,6 +35,7 @@ export default function App() {
               <span className="h-1.5 w-1.5 rounded-full bg-sidebar-primary animate-pulse" />
               Live Calculations
             </span>
+            <CurrencyToggle />
             <ThemeToggle />
           </div>
         </div>

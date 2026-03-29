@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { AnimatedNumber } from "./AnimatedNumber";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface StatProps {
   label: string;
@@ -16,6 +17,7 @@ export function ResultStat({
   highlight,
   color = "default",
 }: StatProps) {
+  const { currencySymbol } = useCurrency();
   const textColorClass = cn(
     "text-xl font-bold font-display",
     color === "green" && "text-chart-1",
@@ -38,6 +40,7 @@ export function ResultStat({
       </p>
       {numericValue !== undefined ? (
         <AnimatedNumber
+          key={currencySymbol}
           value={numericValue}
           compact
           className={textColorClass}

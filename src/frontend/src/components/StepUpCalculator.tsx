@@ -1,5 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
@@ -10,8 +12,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { calculateStepUpSIP } from "@/utils/calculations";
-import { formatINR } from "@/utils/formatters";
-import { useMemo, useState } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useMemo } from "react";
 import {
   Area,
   AreaChart,
@@ -27,14 +30,17 @@ import { ResultStat } from "./ResultCard";
 import { SliderInput } from "./SliderInput";
 
 export function StepUpCalculator() {
-  const [monthly, setMonthly] = useState(10000);
-  const [stepUp, setStepUp] = useState(10);
-  const [returnRate, setReturnRate] = useState(12);
-  const [years, setYears] = useState(15);
+  const { formatCurrency, currencySymbol } = useCurrency();
+  const [monthly, setMonthly] = useLocalStorage("stepup-monthly", 10000);
+  const [stepUp, setStepUp] = useLocalStorage("stepup-percent", 10);
+  const [returnRate, setReturnRate] = useLocalStorage("stepup-returnRate", 12);
+  const [years, setYears] = useLocalStorage("stepup-years", 15);
+  const [adjustForInflation, setAdjustForInflation] = useLocalStorage("stepup-adjustForInflation", false);
+  const [inflationRate, setInflationRate] = useLocalStorage("stepup-inflationRate", 6);
 
   const result = useMemo(
-    () => calculateStepUpSIP(monthly, stepUp, returnRate, years),
-    [monthly, stepUp, returnRate, years],
+    () => calculateStepUpSIP(monthly, stepUp, returnRate, years, adjustForInflation ? inflationRate : null),
+    [monthly, stepUp, returnRate, years, adjustForInflation, inflationRate],
   );
 
   const chartData = result.yearlyBreakdown.map((d) => ({
@@ -51,11 +57,11 @@ export function StepUpCalculator() {
           <p className="font-semibold text-foreground">{label}</p>
           {payload.map((p: any) => (
             <p key={p.name} style={{ color: p.color }}>
-              {p.name}: {formatINR(p.value, true)}
+              {p.name}: {formatCurrency(p.value, true)}
             </p>
           ))}
           <p className="font-bold text-foreground border-t border-border pt-1">
-            Total: {formatINR(total, true)}
+            Total: {formatCurrency(total, true)}
           </p>
         </div>
       );
@@ -104,7 +110,7 @@ export function StepUpCalculator() {
               min={500}
               max={100000}
               step={500}
-              prefix="₹"
+              prefix={currencySymbol}
               inputId="stepup-monthly"
               ocidInput="stepup.monthly_input"
             />
@@ -141,6 +147,36 @@ export function StepUpCalculator() {
               inputId="stepup-period"
               ocidInput="stepup.period_input"
             />
+
+            {/* Inflation Toggle */}
+            <div className="space-y-4 pt-2 border-t border-border/60">
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="stepup-inflation-toggle"
+                  className="text-sm font-semibold text-foreground cursor-pointer"
+                >
+                  Adjust for Inflation
+                </Label>
+                <Switch
+                  id="stepup-inflation-toggle"
+                  checked={adjustForInflation}
+                  onCheckedChange={setAdjustForInflation}
+                />
+              </div>
+              {adjustForInflation && (
+                <SliderInput
+                  label="Expected Inflation Rate"
+                  value={inflationRate}
+                  onChange={setInflationRate}
+                  min={1}
+                  max={15}
+                  step={0.5}
+                  suffix="%"
+                  inputId="stepup-inflation"
+                  ocidInput="stepup.inflation_input"
+                />
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -158,22 +194,36 @@ export function StepUpCalculator() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <ResultStat
                 label="Total Invested"
-                value={formatINR(result.totalInvested, true)}
+                value={formatCurrency(result.totalInvested, true)}
                 numericValue={result.totalInvested}
               />
               <ResultStat
                 label="Est. Returns"
-                value={formatINR(result.estimatedReturns, true)}
+                value={formatCurrency(result.estimatedReturns, true)}
                 numericValue={result.estimatedReturns}
                 color="green"
               />
               <ResultStat
                 label="Maturity Value"
-                value={formatINR(result.maturityValue, true)}
+                value={formatCurrency(result.maturityValue, true)}
                 numericValue={result.maturityValue}
                 highlight
               />
             </div>
+
+            {adjustForInflation && result.inflationAdjustedMaturity && (
+              <div className="bg-muted border border-border/80 rounded-xl p-4 mb-6 text-center shadow-inner">
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                  Inflation Adjusted Value
+                </p>
+                <p className="text-2xl font-bold font-display text-primary">
+                  {formatCurrency(result.inflationAdjustedMaturity)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Purchasing power of your returns in today's money
+                </p>
+              </div>
+            )}
 
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
@@ -226,7 +276,7 @@ export function StepUpCalculator() {
                     tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(v) => formatINR(v, true)}
+                    tickFormatter={(v) => formatCurrency(v, true)}
                     width={65}
                   />
                   <Tooltip content={<CustomTooltip />} />
@@ -263,7 +313,7 @@ export function StepUpCalculator() {
                   Starting SIP
                 </p>
                 <p className="text-lg font-bold font-display" style={{ color: "#8b5cf6" }}>
-                  ₹{monthly.toLocaleString("en-IN")}
+                  {currencySymbol}{monthly.toLocaleString("en-IN")}
                 </p>
               </div>
               <div className="bg-muted/40 rounded-lg p-3 text-center">
@@ -271,7 +321,7 @@ export function StepUpCalculator() {
                   Final Year SIP
                 </p>
                 <p className="text-lg font-bold font-display" style={{ color: "#06b6d4" }}>
-                  ₹{finalYearSIP.toLocaleString("en-IN")}
+                  {currencySymbol}{finalYearSIP.toLocaleString("en-IN")}
                 </p>
               </div>
               <div className="bg-muted/40 rounded-lg p-3 text-center">
@@ -324,16 +374,16 @@ export function StepUpCalculator() {
                       Year {row.year}
                     </TableCell>
                     <TableCell className="text-right font-medium" style={{ color: "#8b5cf6" }}>
-                      ₹{row.sipAmount.toLocaleString("en-IN")}
+                      {currencySymbol}{row.sipAmount.toLocaleString("en-IN")}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">
-                      {formatINR(row.invested, true)}
+                      {formatCurrency(row.invested, true)}
                     </TableCell>
                     <TableCell className="text-right text-chart-1 font-medium">
-                      {formatINR(row.returns, true)}
+                      {formatCurrency(row.returns, true)}
                     </TableCell>
                     <TableCell className="text-right font-bold">
-                      {formatINR(row.total, true)}
+                      {formatCurrency(row.total, true)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -353,8 +403,8 @@ export function StepUpCalculator() {
             <p>
               A <strong>Step-Up SIP</strong> (also called a Top-Up SIP) is where
               you increase your monthly SIP amount by a fixed percentage every
-              year. For example, if you start with ₹10,000/month and step up by
-              10% annually, your SIP becomes ₹11,000 in Year 2, ₹12,100 in Year
+              year. For example, if you start with {currencySymbol}10,000/month and step up by
+              10% annually, your SIP becomes {currencySymbol}11,000 in Year 2, {currencySymbol}12,100 in Year
               3, and so on. This aligns with salary increments and significantly
               boosts your final corpus.
             </p>
@@ -373,11 +423,11 @@ export function StepUpCalculator() {
             </h4>
             <div className="bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 rounded-lg p-4 text-sm space-y-2">
               <p>
-                Starting SIP: <strong>₹{monthly.toLocaleString("en-IN")}/month</strong>
+                Starting SIP: <strong>{currencySymbol}{monthly.toLocaleString("en-IN")}/month</strong>
               </p>
               <p>
                 Annual Increase: <strong>{stepUp}%</strong> → Final year SIP:{" "}
-                <strong>₹{finalYearSIP.toLocaleString("en-IN")}/month</strong>
+                <strong>{currencySymbol}{finalYearSIP.toLocaleString("en-IN")}/month</strong>
               </p>
               <p>
                 SIP grew by{" "}
@@ -386,12 +436,12 @@ export function StepUpCalculator() {
               </p>
               <p>
                 Total Invested:{" "}
-                <strong>{formatINR(result.totalInvested)}</strong>
+                <strong>{formatCurrency(result.totalInvested)}</strong>
               </p>
               <p>
                 Final Corpus:{" "}
                 <strong className="text-primary">
-                  {formatINR(result.maturityValue)}
+                  {formatCurrency(result.maturityValue)}
                 </strong>
               </p>
             </div>

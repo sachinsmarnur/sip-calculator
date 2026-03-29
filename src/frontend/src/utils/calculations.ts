@@ -2,6 +2,7 @@ export interface SIPResult {
   totalInvested: number;
   estimatedReturns: number;
   maturityValue: number;
+  inflationAdjustedMaturity: number | null;
   yearlyBreakdown: YearlyData[];
 }
 
@@ -16,6 +17,7 @@ export interface LumpSumResult {
   principal: number;
   estimatedReturns: number;
   maturityValue: number;
+  inflationAdjustedMaturity: number | null;
   yearlyGrowth: YearlyData[];
 }
 
@@ -35,16 +37,25 @@ export interface SWPMonthlyData {
   closingBalance: number;
 }
 
+export function calculateInflationDiscountedValue(fv: number, inflationRate: number, years: number): number {
+  return fv / (1 + inflationRate / 100) ** years;
+}
+
 export function calculateSIP(
   monthlyInvestment: number,
   annualReturn: number,
   years: number,
+  inflationRate: number | null = null,
 ): SIPResult {
   const r = annualReturn / 12 / 100;
   const n = years * 12;
   const maturityValue = monthlyInvestment * (((1 + r) ** n - 1) / r) * (1 + r);
   const totalInvested = monthlyInvestment * n;
   const estimatedReturns = maturityValue - totalInvested;
+  
+  const inflationAdjustedMaturity = inflationRate !== null 
+    ? calculateInflationDiscountedValue(maturityValue, inflationRate, years)
+    : null;
 
   const yearlyBreakdown: YearlyData[] = [];
   for (let y = 1; y <= years; y++) {
@@ -59,16 +70,21 @@ export function calculateSIP(
     });
   }
 
-  return { totalInvested, estimatedReturns, maturityValue, yearlyBreakdown };
+  return { totalInvested, estimatedReturns, maturityValue, inflationAdjustedMaturity, yearlyBreakdown };
 }
 
 export function calculateLumpSum(
   principal: number,
   annualReturn: number,
   years: number,
+  inflationRate: number | null = null,
 ): LumpSumResult {
   const maturityValue = principal * (1 + annualReturn / 100) ** years;
   const estimatedReturns = maturityValue - principal;
+
+  const inflationAdjustedMaturity = inflationRate !== null 
+    ? calculateInflationDiscountedValue(maturityValue, inflationRate, years)
+    : null;
 
   const yearlyGrowth: YearlyData[] = [];
   for (let y = 1; y <= years; y++) {
@@ -81,7 +97,7 @@ export function calculateLumpSum(
     });
   }
 
-  return { principal, estimatedReturns, maturityValue, yearlyGrowth };
+  return { principal, estimatedReturns, maturityValue, inflationAdjustedMaturity, yearlyGrowth };
 }
 
 // --- Step-Up SIP ---
@@ -90,6 +106,7 @@ export interface StepUpSIPResult {
   totalInvested: number;
   estimatedReturns: number;
   maturityValue: number;
+  inflationAdjustedMaturity: number | null;
   yearlyBreakdown: StepUpYearlyData[];
 }
 
@@ -106,6 +123,7 @@ export function calculateStepUpSIP(
   annualStepUp: number, // percentage e.g. 10 for 10%
   annualReturn: number,
   years: number,
+  inflationRate: number | null = null,
 ): StepUpSIPResult {
   const r = annualReturn / 12 / 100;
   let totalInvested = 0;
@@ -130,10 +148,15 @@ export function calculateStepUpSIP(
     });
   }
 
+  const inflationAdjustedMaturity = inflationRate !== null 
+    ? calculateInflationDiscountedValue(corpusValue, inflationRate, years)
+    : null;
+
   return {
     totalInvested,
     estimatedReturns: corpusValue - totalInvested,
     maturityValue: corpusValue,
+    inflationAdjustedMaturity,
     yearlyBreakdown,
   };
 }

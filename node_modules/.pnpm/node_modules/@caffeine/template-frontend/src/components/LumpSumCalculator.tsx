@@ -1,8 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { calculateLumpSum } from "@/utils/calculations";
-import { formatINR } from "@/utils/formatters";
-import { useMemo, useState } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useMemo } from "react";
 import {
   Area,
   AreaChart,
@@ -18,13 +21,16 @@ import { ResultStat } from "./ResultCard";
 import { SliderInput } from "./SliderInput";
 
 export function LumpSumCalculator() {
-  const [amount, setAmount] = useState(500000);
-  const [returnRate, setReturnRate] = useState(12);
-  const [years, setYears] = useState(15);
+  const { formatCurrency, currencySymbol } = useCurrency();
+  const [amount, setAmount] = useLocalStorage("lumpsum-amount", 500000);
+  const [returnRate, setReturnRate] = useLocalStorage("lumpsum-returnRate", 12);
+  const [years, setYears] = useLocalStorage("lumpsum-years", 15);
+  const [adjustForInflation, setAdjustForInflation] = useLocalStorage("lumpsum-adjustForInflation", false);
+  const [inflationRate, setInflationRate] = useLocalStorage("lumpsum-inflationRate", 6);
 
   const result = useMemo(
-    () => calculateLumpSum(amount, returnRate, years),
-    [amount, returnRate, years],
+    () => calculateLumpSum(amount, returnRate, years, adjustForInflation ? inflationRate : null),
+    [amount, returnRate, years, adjustForInflation, inflationRate],
   );
 
   const chartData = result.yearlyGrowth.map((d) => ({
@@ -41,11 +47,11 @@ export function LumpSumCalculator() {
           <p className="font-semibold text-foreground">{label}</p>
           {payload.map((p: any) => (
             <p key={p.name} style={{ color: p.color }}>
-              {p.name}: {formatINR(p.value, true)}
+              {p.name}: {formatCurrency(p.value, true)}
             </p>
           ))}
           <p className="font-bold text-foreground border-t border-border pt-1">
-            Total: {formatINR(total, true)}
+            Total: {formatCurrency(total, true)}
           </p>
         </div>
       );
@@ -86,7 +92,7 @@ export function LumpSumCalculator() {
               min={10000}
               max={10000000}
               step={10000}
-              prefix="₹"
+              prefix={currencySymbol}
               inputId="ls-amount"
               ocidInput="lumpsum.amount_input"
             />
@@ -112,6 +118,36 @@ export function LumpSumCalculator() {
               inputId="ls-period"
               ocidInput="lumpsum.period_input"
             />
+
+            {/* Inflation Toggle */}
+            <div className="space-y-4 pt-2 border-t border-border/60">
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="lumpsum-inflation-toggle"
+                  className="text-sm font-semibold text-foreground cursor-pointer"
+                >
+                  Adjust for Inflation
+                </Label>
+                <Switch
+                  id="lumpsum-inflation-toggle"
+                  checked={adjustForInflation}
+                  onCheckedChange={setAdjustForInflation}
+                />
+              </div>
+              {adjustForInflation && (
+                <SliderInput
+                  label="Expected Inflation Rate"
+                  value={inflationRate}
+                  onChange={setInflationRate}
+                  min={1}
+                  max={15}
+                  step={0.5}
+                  suffix="%"
+                  inputId="lumpsum-inflation"
+                  ocidInput="lumpsum.inflation_input"
+                />
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -128,19 +164,33 @@ export function LumpSumCalculator() {
             <div className="grid grid-cols-3 gap-3 mb-6">
               <ResultStat
                 label="Principal"
-                value={formatINR(result.principal, true)}
+                value={formatCurrency(result.principal, true)}
               />
               <ResultStat
                 label="Est. Returns"
-                value={formatINR(result.estimatedReturns, true)}
+                value={formatCurrency(result.estimatedReturns, true)}
                 color="amber"
               />
               <ResultStat
                 label="Maturity Value"
-                value={formatINR(result.maturityValue, true)}
+                value={formatCurrency(result.maturityValue, true)}
                 highlight
               />
             </div>
+
+            {adjustForInflation && result.inflationAdjustedMaturity && (
+              <div className="bg-muted border border-border/80 rounded-xl p-4 mb-6 text-center shadow-inner">
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                  Inflation Adjusted Value
+                </p>
+                <p className="text-2xl font-bold font-display text-primary">
+                  {formatCurrency(result.inflationAdjustedMaturity)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Purchasing power of your returns in today's money
+                </p>
+              </div>
+            )}
 
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
@@ -193,7 +243,7 @@ export function LumpSumCalculator() {
                     tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(v) => formatINR(v, true)}
+                    tickFormatter={(v) => formatCurrency(v, true)}
                     width={65}
                   />
                   <Tooltip content={<CustomTooltip />} />
@@ -272,7 +322,7 @@ export function LumpSumCalculator() {
                 <strong>FV</strong> — Future Value
               </li>
               <li>
-                <strong>PV</strong> — Present Value / Principal (₹
+                <strong>PV</strong> — Present Value / Principal ({currencySymbol}
                 {amount.toLocaleString("en-IN")})
               </li>
               <li>
@@ -289,7 +339,7 @@ export function LumpSumCalculator() {
             </h4>
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm space-y-2">
               <p>
-                Investment: <strong>₹{amount.toLocaleString("en-IN")}</strong>
+                Investment: <strong>{currencySymbol}{amount.toLocaleString("en-IN")}</strong>
               </p>
               <p>
                 Return Rate: <strong>{returnRate}% per annum</strong>
@@ -298,19 +348,19 @@ export function LumpSumCalculator() {
                 Period: <strong>{years} years</strong>
               </p>
               <p>
-                Calculation: ₹{amount.toLocaleString("en-IN")} × (1 +{" "}
+                Calculation: {currencySymbol}{amount.toLocaleString("en-IN")} × (1 +{" "}
                 {returnRate}/100)^{years}
               </p>
               <p>
                 Maturity Value:{" "}
                 <strong className="text-amber-700">
-                  {formatINR(result.maturityValue)}
+                  {formatCurrency(result.maturityValue)}
                 </strong>
               </p>
               <p>
                 Profit:{" "}
                 <strong className="text-green-700">
-                  {formatINR(result.estimatedReturns)}
+                  {formatCurrency(result.estimatedReturns)}
                 </strong>
               </p>
             </div>

@@ -1,4 +1,4 @@
-import { formatINR } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useMotionValue, useSpring, useTransform, motion } from "motion/react";
 import { useEffect } from "react";
 
@@ -13,6 +13,7 @@ export function AnimatedNumber({
   compact = true,
   className,
 }: AnimatedNumberProps) {
+  const { formatCurrency } = useCurrency();
   const motionValue = useMotionValue(0);
   const springValue = useSpring(motionValue, {
     damping: 40,
@@ -20,7 +21,7 @@ export function AnimatedNumber({
     mass: 1,
   });
   const display = useTransform(springValue, (latest) =>
-    formatINR(Math.round(latest), compact),
+    formatCurrency(Math.round(latest), compact),
   );
 
   useEffect(() => {

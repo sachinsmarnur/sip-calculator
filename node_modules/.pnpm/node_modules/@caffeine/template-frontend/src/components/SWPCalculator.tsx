@@ -1,9 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calculateSWP } from "@/utils/calculations";
-import { formatINR, formatMonths } from "@/utils/formatters";
+import { formatMonths } from "@/utils/formatters";
+import { useCurrency } from "@/hooks/useCurrency";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Area,
   AreaChart,
@@ -19,10 +21,11 @@ import { ResultStat } from "./ResultCard";
 import { SliderInput } from "./SliderInput";
 
 export function SWPCalculator() {
-  const [corpus, setCorpus] = useState(5000000);
-  const [withdrawal, setWithdrawal] = useState(30000);
-  const [returnRate, setReturnRate] = useState(10);
-  const [years, setYears] = useState(20);
+  const { formatCurrency, currencySymbol } = useCurrency();
+  const [corpus, setCorpus] = useLocalStorage("swp-corpus", 5000000);
+  const [withdrawal, setWithdrawal] = useLocalStorage("swp-withdrawal", 30000);
+  const [returnRate, setReturnRate] = useLocalStorage("swp-returnRate", 10);
+  const [years, setYears] = useLocalStorage("swp-years", 20);
 
   const result = useMemo(
     () => calculateSWP(corpus, withdrawal, returnRate, years),
@@ -56,7 +59,7 @@ export function SWPCalculator() {
         <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-sm">
           <p className="font-semibold">{label}</p>
           <p className="text-primary">
-            {formatINR(payload[0].value, true)} remaining
+            {formatCurrency(payload[0].value, true)} remaining
           </p>
         </div>
       );
@@ -90,7 +93,7 @@ export function SWPCalculator() {
               Corpus Exhausted Early!
             </p>
             <p className="text-sm text-foreground/80 mt-0.5">
-              At ₹{withdrawal.toLocaleString("en-IN")}/month withdrawal, your
+              At {currencySymbol}{withdrawal.toLocaleString("en-IN")}/month withdrawal, your
               corpus will be fully depleted in{" "}
               <strong>{formatMonths(result.corpusExhaustedMonth!)}</strong>.
               Consider reducing monthly withdrawal or increasing corpus.
@@ -111,7 +114,7 @@ export function SWPCalculator() {
             </p>
             <p className="text-sm text-foreground/80 mt-0.5">
               Your corpus will last the full {years} years with{" "}
-              <strong>{formatINR(result.remainingCorpus, true)}</strong>{" "}
+              <strong>{formatCurrency(result.remainingCorpus, true)}</strong>{" "}
               remaining at the end.
             </p>
           </div>
@@ -133,7 +136,7 @@ export function SWPCalculator() {
               min={100000}
               max={50000000}
               step={100000}
-              prefix="₹"
+              prefix={currencySymbol}
               inputId="swp-corpus"
               ocidInput="swp.corpus_input"
             />
@@ -144,7 +147,7 @@ export function SWPCalculator() {
               min={1000}
               max={500000}
               step={1000}
-              prefix="₹"
+              prefix={currencySymbol}
               inputId="swp-withdrawal"
               ocidInput="swp.withdrawal_input"
             />
@@ -186,17 +189,17 @@ export function SWPCalculator() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
               <ResultStat
                 label="Initial Corpus"
-                value={formatINR(corpus, true)}
+                value={formatCurrency(corpus, true)}
               />
               <ResultStat
                 label="Total Withdrawn"
-                value={formatINR(result.totalWithdrawn, true)}
+                value={formatCurrency(result.totalWithdrawn, true)}
                 color="amber"
               />
               <ResultStat
                 label="Remaining"
                 value={
-                  isExhausted ? "₹0" : formatINR(result.remainingCorpus, true)
+                  isExhausted ? `${currencySymbol}0` : formatCurrency(result.remainingCorpus, true)
                 }
                 color={isExhausted ? "default" : "green"}
               />
@@ -248,7 +251,7 @@ export function SWPCalculator() {
                     tick={{ fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(v) => formatINR(v, true)}
+                    tickFormatter={(v) => formatCurrency(v, true)}
                     width={65}
                   />
                   <Tooltip content={<CustomTooltip />} />
@@ -285,7 +288,7 @@ export function SWPCalculator() {
                   className="text-lg font-bold font-display"
                   style={{ color: "#7c6af0" }}
                 >
-                  {formatINR((corpus * returnRate) / 12 / 100, true)}
+                  {formatCurrency((corpus * returnRate) / 12 / 100, true)}
                 </p>
               </div>
               <div className="bg-muted/40 rounded-lg p-3 text-center">
@@ -293,7 +296,7 @@ export function SWPCalculator() {
                   Net Monthly Drawdown
                 </p>
                 <p className="text-lg font-bold font-display text-destructive">
-                  {formatINR(
+                  {formatCurrency(
                     Math.max(0, withdrawal - (corpus * returnRate) / 12 / 100),
                     true,
                   )}
@@ -335,11 +338,11 @@ export function SWPCalculator() {
             </h4>
             <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 text-sm space-y-2">
               <p>
-                Corpus: <strong>₹{corpus.toLocaleString("en-IN")}</strong>
+                Corpus: <strong>{currencySymbol}{corpus.toLocaleString("en-IN")}</strong>
               </p>
               <p>
                 Monthly Withdrawal:{" "}
-                <strong>₹{withdrawal.toLocaleString("en-IN")}</strong>
+                <strong>{currencySymbol}{withdrawal.toLocaleString("en-IN")}</strong>
               </p>
               <p>
                 Annual Return: <strong>{returnRate}%</strong> → Monthly:{" "}
@@ -347,14 +350,14 @@ export function SWPCalculator() {
               </p>
               <p>
                 Monthly return earned on corpus:{" "}
-                <strong>{formatINR((corpus * returnRate) / 12 / 100)}</strong>
+                <strong>{formatCurrency((corpus * returnRate) / 12 / 100)}</strong>
               </p>
               <p>
-                Since withdrawal ({formatINR(withdrawal)}) is{" "}
+                Since withdrawal ({formatCurrency(withdrawal)}) is{" "}
                 {withdrawal > (corpus * returnRate) / 12 / 100
                   ? "more than"
                   : "less than"}{" "}
-                monthly return ({formatINR((corpus * returnRate) / 12 / 100)}),
+                monthly return ({formatCurrency((corpus * returnRate) / 12 / 100)}),
                 your corpus will{" "}
                 <strong>
                   {withdrawal > (corpus * returnRate) / 12 / 100
