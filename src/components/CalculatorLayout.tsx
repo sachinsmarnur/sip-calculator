@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 const navItems = [
   { 
-    path: "/sip-calculator", 
+    path: "/", 
     label: "SIP", 
     icon: TrendingUp, 
     shortLabel: "SIP", 
@@ -75,8 +75,6 @@ export function CalculatorLayout() {
       if (ogTitle) {
         ogTitle.setAttribute('content', activeItem.title);
       }
-    } else if (location.pathname === "/") {
-      document.title = "Smart Investment Calculators – InvestCalc";
     }
   }, [location.pathname]);
 

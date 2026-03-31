@@ -12,14 +12,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<CalculatorLayout />}>
-          <Route path="/" element={<Navigate to="/sip-calculator" replace />} />
-          <Route path="/sip-calculator" element={<SIPCalculator />} />
+          <Route path="/" element={<SIPCalculator />} />
+          <Route path="/sip-calculator" element={<Navigate to="/" replace />} />
           <Route path="/step-up-calculator" element={<StepUpCalculator />} />
           <Route path="/lumpsum-calculator" element={<LumpSumCalculator />} />
           <Route path="/goal-planner" element={<GoalPlannerCalculator />} />
           <Route path="/swp-calculator" element={<SWPCalculator />} />
           {/* Fallback route */}
-          <Route path="*" element={<Navigate to="/sip-calculator" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
 
