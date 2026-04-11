@@ -19,6 +19,8 @@ import {
 import { ExplanationSection } from "./ExplanationSection";
 import { ResultStat } from "./ResultCard";
 import { SliderInput } from "./SliderInput";
+import { DownloadPDFButton } from "./DownloadPDFButton";
+import { exportLumpSumPDF } from "@/utils/pdfExport";
 
 export function LumpSumCalculator() {
   const { formatCurrency, currencySymbol } = useCurrency();
@@ -156,9 +158,28 @@ export function LumpSumCalculator() {
           data-ocid="lumpsum.result_card"
         >
           <CardHeader className="pb-4">
-            <CardTitle className="font-display text-lg">
-              Growth Projection
-            </CardTitle>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="font-display text-lg">
+                Growth Projection
+              </CardTitle>
+              <DownloadPDFButton
+                onExport={() =>
+                  exportLumpSumPDF({
+                    amount,
+                    returnRate,
+                    years,
+                    principal: result.principal,
+                    estimatedReturns: result.estimatedReturns,
+                    maturityValue: result.maturityValue,
+                    inflationRate: adjustForInflation ? inflationRate : null,
+                    inflationAdjustedMaturity: result.inflationAdjustedMaturity,
+                    yearlyGrowth: result.yearlyGrowth,
+                    currencySymbol,
+                    formatCurrency,
+                  })
+                }
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3 mb-6">

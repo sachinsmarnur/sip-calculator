@@ -28,6 +28,8 @@ import {
 import { ExplanationSection } from "./ExplanationSection";
 import { ResultStat } from "./ResultCard";
 import { SliderInput } from "./SliderInput";
+import { DownloadPDFButton } from "./DownloadPDFButton";
+import { exportStepUpPDF } from "@/utils/pdfExport";
 
 export function StepUpCalculator() {
   const { formatCurrency, currencySymbol } = useCurrency();
@@ -186,9 +188,30 @@ export function StepUpCalculator() {
           data-ocid="stepup.result_card"
         >
           <CardHeader className="pb-4">
-            <CardTitle className="font-display text-lg">
-              Step-Up Growth Projection
-            </CardTitle>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="font-display text-lg">
+                Step-Up Growth Projection
+              </CardTitle>
+              <DownloadPDFButton
+                onExport={() =>
+                  exportStepUpPDF({
+                    monthly,
+                    stepUp,
+                    returnRate,
+                    years,
+                    totalInvested: result.totalInvested,
+                    estimatedReturns: result.estimatedReturns,
+                    maturityValue: result.maturityValue,
+                    inflationRate: adjustForInflation ? inflationRate : null,
+                    inflationAdjustedMaturity: result.inflationAdjustedMaturity,
+                    finalYearSIP,
+                    yearlyBreakdown: result.yearlyBreakdown,
+                    currencySymbol,
+                    formatCurrency,
+                  })
+                }
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">

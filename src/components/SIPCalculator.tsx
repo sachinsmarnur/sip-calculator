@@ -31,6 +31,8 @@ import {
 import { ExplanationSection } from "./ExplanationSection";
 import { ResultStat } from "./ResultCard";
 import { SliderInput } from "./SliderInput";
+import { DownloadPDFButton } from "./DownloadPDFButton";
+import { exportSIPPDF } from "@/utils/pdfExport";
 
 const CHART_COLORS = ["#2db38a", "#f0a843"];
 const CHART_KEYS = ["invested", "returns"] as const;
@@ -191,10 +193,28 @@ export function SIPCalculator() {
           data-ocid="sip.result_card"
         >
           <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <CardTitle className="font-display text-lg">
                 Projected Returns
               </CardTitle>
+              <div className="flex items-center gap-2">
+                <DownloadPDFButton
+                  onExport={() =>
+                    exportSIPPDF({
+                      monthly,
+                      returnRate,
+                      years,
+                      totalInvested: result.totalInvested,
+                      estimatedReturns: result.estimatedReturns,
+                      maturityValue: result.maturityValue,
+                      inflationRate: adjustForInflation ? inflationRate : null,
+                      inflationAdjustedMaturity: result.inflationAdjustedMaturity,
+                      yearlyBreakdown: result.yearlyBreakdown,
+                      currencySymbol,
+                      formatCurrency,
+                    })
+                  }
+                />
               {/* Chart mode toggle */}
               <div className="flex bg-muted rounded-lg p-0.5 gap-0.5">
                 <button
@@ -219,6 +239,7 @@ export function SIPCalculator() {
                 >
                   Growth
                 </button>
+              </div>
               </div>
             </div>
           </CardHeader>

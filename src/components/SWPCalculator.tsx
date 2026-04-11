@@ -19,6 +19,8 @@ import {
 import { ExplanationSection } from "./ExplanationSection";
 import { ResultStat } from "./ResultCard";
 import { SliderInput } from "./SliderInput";
+import { DownloadPDFButton } from "./DownloadPDFButton";
+import { exportSWPPDF } from "@/utils/pdfExport";
 
 export function SWPCalculator() {
   const { formatCurrency, currencySymbol } = useCurrency();
@@ -181,9 +183,28 @@ export function SWPCalculator() {
           data-ocid="swp.result_card"
         >
           <CardHeader className="pb-4">
-            <CardTitle className="font-display text-lg">
-              Corpus Depletion Forecast
-            </CardTitle>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="font-display text-lg">
+                Corpus Depletion Forecast
+              </CardTitle>
+              <DownloadPDFButton
+                onExport={() =>
+                  exportSWPPDF({
+                    corpus,
+                    withdrawal,
+                    returnRate,
+                    years,
+                    totalWithdrawn: result.totalWithdrawn,
+                    remainingCorpus: result.remainingCorpus,
+                    corpusExhaustedMonth: result.corpusExhaustedMonth,
+                    monthlyBreakdown: result.monthlyBreakdown,
+                    currencySymbol,
+                    formatCurrency,
+                    formatMonths,
+                  })
+                }
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">

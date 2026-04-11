@@ -19,6 +19,8 @@ import {
 import { ExplanationSection } from "./ExplanationSection";
 import { ResultStat } from "./ResultCard";
 import { SliderInput } from "./SliderInput";
+import { DownloadPDFButton } from "./DownloadPDFButton";
+import { exportGoalPDF } from "@/utils/pdfExport";
 
 const CHART_COLORS = ["#f97316", "#06b6d4"];
 
@@ -161,9 +163,29 @@ export function GoalPlannerCalculator() {
           data-ocid="goal.result_card"
         >
           <CardHeader className="pb-4">
-            <CardTitle className="font-display text-lg">
-              Your SIP Plan
-            </CardTitle>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="font-display text-lg">
+                Your SIP Plan
+              </CardTitle>
+              <DownloadPDFButton
+                onExport={() =>
+                  exportGoalPDF({
+                    targetAmount,
+                    returnRate,
+                    years,
+                    requiredMonthlySIP: result.requiredMonthlySIP,
+                    totalInvested: result.totalInvested,
+                    estimatedReturns: result.estimatedReturns,
+                    inflationRate: adjustForInflation ? inflationRate : null,
+                    inflationAdjustedTarget: result.inflationAdjustedTarget,
+                    milestones: result.milestones,
+                    currencySymbol,
+                    formatCurrency,
+                    formatMonths,
+                  })
+                }
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="bg-gradient-to-r from-orange-50 to-cyan-50 dark:from-orange-950/30 dark:to-cyan-950/30 border border-orange-200 dark:border-orange-800/50 rounded-xl p-5 mb-5 text-center">
