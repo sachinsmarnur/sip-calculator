@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { calculateSIP } from "@/utils/calculations";
+import { calculateSIP, calculateTax } from "@/utils/calculations";
+import { TaxToggle } from "./TaxToggle";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useMemo, useState } from "react";
@@ -45,11 +46,19 @@ export function SIPCalculator() {
   const [chartMode, setChartMode] = useLocalStorage<"pie" | "growth">("sip-chartMode", "pie");
   const [adjustForInflation, setAdjustForInflation] = useLocalStorage("sip-adjustForInflation", false);
   const [inflationRate, setInflationRate] = useLocalStorage("sip-inflationRate", 6);
+  const [applyTax, setApplyTax] = useLocalStorage("sip-applyTax", false);
+  const [fundType, setFundType] = useLocalStorage<"equity" | "debt">("sip-fundType", "equity");
+  const [taxSlab, setTaxSlab] = useLocalStorage("sip-taxSlab", 30);
 
   const result = useMemo(
     () => calculateSIP(monthly, returnRate, years, adjustForInflation ? inflationRate : null),
     [monthly, returnRate, years, adjustForInflation, inflationRate],
   );
+
+  const taxResult = useMemo(() => {
+    if (!applyTax) return null;
+    return calculateTax(result.estimatedReturns, result.maturityValue, fundType, years, taxSlab);
+  }, [applyTax, result.estimatedReturns, result.maturityValue, fundType, years, taxSlab]);
 
   const pieData = [
     { name: "Invested", value: result.totalInvested, key: CHART_KEYS[0] },
@@ -184,6 +193,16 @@ export function SIPCalculator() {
                 />
               )}
             </div>
+
+            <TaxToggle
+              applyTax={applyTax}
+              onApplyTaxChange={setApplyTax}
+              fundType={fundType}
+              onFundTypeChange={setFundType}
+              taxSlab={taxSlab}
+              onTaxSlabChange={setTaxSlab}
+              years={years}
+            />
           </CardContent>
         </Card>
 
@@ -209,6 +228,10 @@ export function SIPCalculator() {
                       maturityValue: result.maturityValue,
                       inflationRate: adjustForInflation ? inflationRate : null,
                       inflationAdjustedMaturity: result.inflationAdjustedMaturity,
+                      taxAmount: taxResult?.taxAmount,
+                      postTaxMaturity: taxResult?.postTaxMaturity,
+                      fundType: applyTax ? fundType : undefined,
+                      taxSlab: applyTax ? taxSlab : undefined,
                       yearlyBreakdown: result.yearlyBreakdown,
                       currencySymbol,
                       formatCurrency,
@@ -275,6 +298,45 @@ export function SIPCalculator() {
                 <p className="text-xs text-muted-foreground mt-1">
                   Purchasing power of your returns in today's money
                 </p>
+              </div>
+            )}
+
+            {taxResult && (
+              <div className="bg-red-50/50 border border-red-100 dark:bg-red-950/20 dark:border-red-900/30 rounded-xl p-4 mb-6 relative overflow-hidden">
+                <div className="absolute right-0 top-0 translate-x-1/3 -translate-y-1/3 opacity-10">
+                  <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                </div>
+                
+                <h4 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-3 flex items-center justify-between">
+                  Post-Tax Returns
+                  <Badge variant="outline" className="bg-white/50 text-red-700 border-red-200 dark:bg-black/20 dark:text-red-400">
+                    {fundType === "equity" ? (years >= 1 ? "LTCG" : "STCG") : "SLAB"}
+                  </Badge>
+                </h4>
+                
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-red-600/80 dark:text-red-400/80 mb-1">Tax Amount Deducted</p>
+                    <p className="font-semibold text-red-700 dark:text-red-300">
+                      -{formatCurrency(taxResult.taxAmount, true)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-red-600/80 dark:text-red-400/80 mb-1">Effective Tax Rate</p>
+                    <p className="font-semibold text-red-700 dark:text-red-300">
+                      {taxResult.effectiveTaxRate.toFixed(2)}%
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="pt-3 border-t border-red-200/50 dark:border-red-900/50">
+                  <p className="text-xs text-red-800/70 dark:text-red-200/70 uppercase tracking-wider font-semibold mb-1">
+                    Post-Tax Maturity Value
+                  </p>
+                  <p className="text-2xl font-bold font-display text-red-700 dark:text-red-400">
+                    {formatCurrency(taxResult.postTaxMaturity)}
+                  </p>
+                </div>
               </div>
             )}
 

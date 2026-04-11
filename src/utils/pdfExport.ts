@@ -203,6 +203,10 @@ export interface SIPPDFData {
   maturityValue: number;
   inflationRate?: number | null;
   inflationAdjustedMaturity?: number | null;
+  taxAmount?: number;
+  postTaxMaturity?: number;
+  fundType?: "equity" | "debt";
+  taxSlab?: number;
   yearlyBreakdown: { year: number; invested: number; returns: number; total: number }[];
   currencySymbol: string;
   formatCurrency: (v: number, compact?: boolean) => string;
@@ -243,6 +247,23 @@ export async function exportSIPPDF(data: SIPPDFData) {
   doc.text(`Wealth Ratio: ${wealthRatio}x   |   Return on Investment: ${returnPct}%   |   Monthly Rate: ${(data.returnRate / 12 / 100).toFixed(5)}`, 14, y);
   y += 10;
 
+  if (data.taxAmount !== undefined && data.postTaxMaturity !== undefined && data.fundType) {
+    let taxY = addSectionTitle(doc, "TAX IMPACT (FY25 RULES)", y, [220, 53, 69]);
+    const isLTCG = data.years >= 1;
+    const taxTypeLabel = data.fundType === "equity" ? (isLTCG ? "LTCG" : "STCG") : "SLAB RATE";
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...DARK);
+    let taxInfo = data.fundType === "equity" ? (isLTCG ? "Equity LTCG @ 12.5% (above Rs. 1.25L)" : "Equity STCG @ 20% flat") : `Debt Fund @ ${data.taxSlab ?? 30}% slab rate`;
+    doc.text(sanitizePdfText(`Tax Category: ${taxTypeLabel}   |   ${taxInfo}`), 14, taxY); taxY += 6;
+    taxY += 2;
+    const taxStats = [
+      { label: "Tax Amount Deducted", value: `-${sanitizePdfText(data.formatCurrency(data.taxAmount, true))}` },
+      { label: "Post-Tax Maturity",  value: sanitizePdfText(data.formatCurrency(data.postTaxMaturity, true)), highlight: true },
+    ];
+    y = addSummaryBox(doc, taxStats, [220, 53, 69], taxY) + 4;
+  }
+
   y = addSectionTitle(doc, "YEAR-BY-YEAR BREAKDOWN", y, BRAND_GREEN);
 
   autoTable(doc, {
@@ -281,6 +302,10 @@ export interface StepUpPDFData {
   maturityValue: number;
   inflationRate?: number | null;
   inflationAdjustedMaturity?: number | null;
+  taxAmount?: number;
+  postTaxMaturity?: number;
+  fundType?: "equity" | "debt";
+  taxSlab?: number;
   finalYearSIP: number;
   yearlyBreakdown: { year: number; sipAmount: number; invested: number; returns: number; total: number }[];
   currencySymbol: string;
@@ -319,6 +344,23 @@ export async function exportStepUpPDF(data: StepUpPDFData) {
     doc.text(sanitizePdfText(`Inflation-Adjusted Maturity: ${formatCurrency(data.inflationAdjustedMaturity, true)}`), 14, y); y += 4;
   }
   y += 6;
+
+  if (data.taxAmount !== undefined && data.postTaxMaturity !== undefined && data.fundType) {
+    let taxY = addSectionTitle(doc, "TAX IMPACT (FY25 RULES)", y, [220, 53, 69]);
+    const isLTCG = data.years >= 1;
+    const taxTypeLabel = data.fundType === "equity" ? (isLTCG ? "LTCG" : "STCG") : "SLAB RATE";
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...DARK);
+    let taxInfo = data.fundType === "equity" ? (isLTCG ? "Equity LTCG @ 12.5% (above Rs. 1.25L)" : "Equity STCG @ 20% flat") : `Debt Fund @ ${data.taxSlab ?? 30}% slab rate`;
+    doc.text(sanitizePdfText(`Tax Category: ${taxTypeLabel}   |   ${taxInfo}`), 14, taxY); taxY += 6;
+    taxY += 2;
+    const taxStats = [
+      { label: "Tax Amount Deducted", value: `-${sanitizePdfText(data.formatCurrency(data.taxAmount, true))}` },
+      { label: "Post-Tax Maturity",  value: sanitizePdfText(data.formatCurrency(data.postTaxMaturity, true)), highlight: true },
+    ];
+    y = addSummaryBox(doc, taxStats, [220, 53, 69], taxY) + 4;
+  }
 
   y = addSectionTitle(doc, "YEAR-BY-YEAR STEP-UP BREAKDOWN", y, BRAND_PURPLE);
 
@@ -359,6 +401,10 @@ export interface LumpSumPDFData {
   maturityValue: number;
   inflationRate?: number | null;
   inflationAdjustedMaturity?: number | null;
+  taxAmount?: number;
+  postTaxMaturity?: number;
+  fundType?: "equity" | "debt";
+  taxSlab?: number;
   yearlyGrowth: { year: number; invested: number; returns: number; total: number }[];
   currencySymbol: string;
   formatCurrency: (v: number, compact?: boolean) => string;
@@ -396,6 +442,23 @@ export async function exportLumpSumPDF(data: LumpSumPDFData) {
     doc.text(sanitizePdfText(`Inflation-Adjusted Maturity: ${formatCurrency(data.inflationAdjustedMaturity, true)}`), 14, y); y += 4;
   }
   y += 6;
+
+  if (data.taxAmount !== undefined && data.postTaxMaturity !== undefined && data.fundType) {
+    let taxY = addSectionTitle(doc, "TAX IMPACT (FY25 RULES)", y, [220, 53, 69]);
+    const isLTCG = data.years >= 1;
+    const taxTypeLabel = data.fundType === "equity" ? (isLTCG ? "LTCG" : "STCG") : "SLAB RATE";
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...DARK);
+    let taxInfo = data.fundType === "equity" ? (isLTCG ? "Equity LTCG @ 12.5% (above Rs. 1.25L)" : "Equity STCG @ 20% flat") : `Debt Fund @ ${data.taxSlab ?? 30}% slab rate`;
+    doc.text(sanitizePdfText(`Tax Category: ${taxTypeLabel}   |   ${taxInfo}`), 14, taxY); taxY += 6;
+    taxY += 2;
+    const taxStats = [
+      { label: "Tax Amount Deducted", value: `-${sanitizePdfText(data.formatCurrency(data.taxAmount, true))}` },
+      { label: "Post-Tax Maturity",  value: sanitizePdfText(data.formatCurrency(data.postTaxMaturity, true)), highlight: true },
+    ];
+    y = addSummaryBox(doc, taxStats, [220, 53, 69], taxY) + 4;
+  }
 
   y = addSectionTitle(doc, "YEAR-BY-YEAR GROWTH", y, BRAND_AMBER);
 

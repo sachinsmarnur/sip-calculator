@@ -300,3 +300,49 @@ export function calculateSWP(
     monthlyBreakdown: breakdown,
   };
 }
+
+// --- Tax Calculations ---
+
+export interface TaxResult {
+  taxableGains: number;
+  taxAmount: number;
+  postTaxMaturity: number;
+  effectiveTaxRate: number;
+}
+
+export function calculateTax(
+  gains: number,
+  maturityValue: number,
+  fundType: "equity" | "debt",
+  holdingYears: number,
+  taxSlab: number = 30
+): TaxResult {
+  let taxAmount = 0;
+  let taxableGains = 0;
+
+  if (fundType === "equity") {
+    if (holdingYears < 1) {
+      // STCG: 20% flat
+      taxableGains = gains;
+      taxAmount = gains * 0.20;
+    } else {
+      // LTCG: 12.5% on gains above 1.25L
+      taxableGains = Math.max(0, gains - 125000);
+      taxAmount = taxableGains * 0.125;
+    }
+  } else {
+    // Debt: Slab rate
+    taxableGains = gains;
+    taxAmount = gains * (taxSlab / 100);
+  }
+
+  const postTaxMaturity = maturityValue - taxAmount;
+  const effectiveTaxRate = gains > 0 ? (taxAmount / gains) * 100 : 0;
+
+  return {
+    taxableGains,
+    taxAmount,
+    postTaxMaturity,
+    effectiveTaxRate
+  };
+}
