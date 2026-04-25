@@ -1,3 +1,5 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -52,12 +54,14 @@ export function GoalPlannerCalculator() {
   ];
 
   const CustomTooltip = ({ active, payload }: any) => {
-          {payload.map((p: any) => (
-            <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-sm">
-              <p className="font-semibold">{payload[0].name}</p>
-              <p className="text-muted-foreground">{formatCurrency(payload[0].value)}</p>
-            </div>
-          ))}
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-sm">
+          <p className="font-semibold">{payload[0].name}</p>
+          <p className="text-muted-foreground">{formatCurrency(payload[0].value)}</p>
+        </div>
+      );
+    }
     return null;
   };
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { CurrencyCode, useCurrency } from "@/hooks/useCurrency";
 import {
   DropdownMenu,
@@ -23,7 +25,7 @@ export function CurrencyToggle() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="h-9 px-3 flex items-center gap-1.5 rounded-md border border-input bg-background/50 hover:bg-accent hover:text-accent-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-9 px-3 flex items-center gap-1.5 rounded-xl bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/70 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring border border-sidebar-border"
           data-ocid="currency.toggle"
         >
           <span className="font-medium text-sm">{currentCurrency.symbol}</span>

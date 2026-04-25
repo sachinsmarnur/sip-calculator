@@ -1,3 +1,5 @@
+"use client";
+
 import { useCurrency } from "@/hooks/useCurrency";
 import { useMotionValue, useSpring, useTransform, motion } from "motion/react";
 import { useEffect } from "react";

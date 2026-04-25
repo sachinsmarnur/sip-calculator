@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { useCurrency } from "@/hooks/useCurrency";

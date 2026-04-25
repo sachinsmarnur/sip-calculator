@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
@@ -31,7 +33,7 @@ export function ExplanationSection({
         />
       </button>
       {open && (
-        <div className="px-5 pb-5 pt-2 bg-card border-t border-border/40 prose prose-sm max-w-none text-foreground/80">
+        <div className="px-5 pb-5 pt-2 bg-card border-t border-border/40 prose prose-sm dark:prose-invert max-w-none text-foreground/80">
           {children}
         </div>
       )}
