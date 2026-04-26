@@ -421,7 +421,7 @@ export function LumpSumCalculator() {
             <h4 className="font-semibold text-base mb-2">
               📊 Example with your inputs
             </h4>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm space-y-2">
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/30 rounded-lg p-4 text-sm space-y-2">
               <p>
                 Investment: <strong>{currencySymbol}{amount.toLocaleString("en-IN")}</strong>
               </p>

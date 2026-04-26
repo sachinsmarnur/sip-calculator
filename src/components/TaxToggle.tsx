@@ -37,7 +37,7 @@ export function TaxToggle({
           >
             Apply Capital Gains Tax
             {applyTax && (
-              <Badge variant="outline" className="text-[10px] h-5 px-1.5 flex items-center bg-blue-50/50 text-blue-600 border-blue-200">
+              <Badge variant="outline" className="text-[10px] h-5 px-1.5 flex items-center bg-blue-50/50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50">
                 FY25 Rules
               </Badge>
             )}
@@ -92,7 +92,7 @@ export function TaxToggle({
                      : "STCG @ 20% flat"}
                  </p>
                </div>
-               <Badge className={isLTCG ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-amber-100 text-amber-800 hover:bg-amber-200"} variant="secondary">
+               <Badge className={isLTCG ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-950/30 dark:text-green-400 dark:hover:bg-green-900/50" : "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-900/50"} variant="secondary">
                  {isLTCG ? "LTCG" : "STCG"}
                </Badge>
              </div>
@@ -116,7 +116,7 @@ export function TaxToggle({
             </div>
           )}
 
-          <div className="flex gap-2 items-start text-xs text-muted-foreground bg-blue-50/50 p-2.5 rounded-lg border border-blue-100/50">
+          <div className="flex gap-2 items-start text-xs text-muted-foreground bg-blue-50/50 dark:bg-blue-950/30 p-2.5 rounded-lg border border-blue-100/50 dark:border-blue-900/50">
             <InfoIcon className="w-3.5 h-3.5 mt-0.5 text-blue-500 shrink-0" />
             <p>Based on Indian tax law post Budget 2024. Surcharge and cess are not included for simplicity.</p>
           </div>

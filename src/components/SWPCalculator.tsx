@@ -359,7 +359,7 @@ export function SWPCalculator() {
             <h4 className="font-semibold text-base mb-2">
               📊 Example with your inputs
             </h4>
-            <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 text-sm space-y-2">
+            <div className="bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900/30 rounded-lg p-4 text-sm space-y-2">
               <p>
                 Corpus: <strong>{currencySymbol}{corpus.toLocaleString("en-IN")}</strong>
               </p>
